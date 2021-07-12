@@ -1,6 +1,7 @@
 import React from 'react';
-import Login from './app/Screens/Login';
-import HomeStart from './app/Screens/HomeStart';
+import Login from './app/screens/Login';
+import HomeStart from './app/screens/HomeStart';
+import CalendarPage from './app/screens/CalendarPage';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createAppContainer } from 'react-navigation';
 
@@ -10,8 +11,11 @@ const RootStack = createStackNavigator({
   },
   Home: {
     screen: HomeStart
-  }
   },
+  Calendar: {
+    screen: CalendarPage
+  }
+},
   {
     initialRouteName: 'Login'
   }

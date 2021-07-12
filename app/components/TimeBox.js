@@ -5,16 +5,16 @@ import colors from '../config/colors';
 const TimeBox = (props) => {
     return (
         <View style={styles.outerBox}> 
-        <View style={[styles.innerBox,  {backgroundColor: props.bgcolor}]}>
-        <Text style={styles.number}>00</Text>
+        <View style={[styles.innerBox, {backgroundColor: props.bgcolor}]}>
+        <Text style={styles.number}>{props.hrs}</Text>
             <Text style={styles.tinyText}>hrs</Text>
         </View>
         <View style={[styles.innerBox,  {backgroundColor: props.bgcolor}]}>
-        <Text style={styles.number}>00</Text>
+        <Text style={styles.number}>{props.mins}</Text>
         <Text style={styles.tinyText}>mins</Text>       
         </View>
         <View style={[styles.innerBox,  {backgroundColor: props.bgcolor}]}>
-        <Text style={styles.number}>00</Text>
+        <Text style={styles.number}>{props.secs}</Text>
         <Text style={styles.tinyText}>secs</Text>
         </View>
         </View>

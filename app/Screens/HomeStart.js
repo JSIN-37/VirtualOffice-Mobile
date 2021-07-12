@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef} from 'react';
-import { View, Text, Platform, StyleSheet, StatusBar, Button, AppState } from 'react-native';
-import { MiddleButton } from '../components/MiddleButton';
+import { View, Text, Platform, StyleSheet, StatusBar, Button, AppState, TouchableOpacity } from 'react-native';
 import { TimeBox } from '../components/TimeBox';
 import { BottomButton } from '../components/BottomButton';
 import { differenceInSeconds } from 'date-fns';
@@ -10,43 +9,28 @@ import colors from '../config/colors';
 
 
 function HomeStart(props) {
-    /* const appState = useRef(AppState.currentState);
-    const [elapsed, setElapsed] = useState(0);
+    
+    const [timer, setTimer] = useState(false);
+    const [currrentTime, setCurrentTime] = useState(0);
 
     useEffect(() => {
-        AppState.addEventListener("change", handleAppStateChange);
-        return () => AppState.removeEventListener("change", handleAppStateChange);
-    }, []);
-
-    const handleAppStateChange = async (nextAppState) => {
-        if (appState.current.match(/inactive|background/) &&
-            nextAppState === "active") {
-            // We just became active again: recalculate elapsed time based 
-            // on what we stored in AsyncStorage when we started.
-            const elapsed = await getElapsedTime();
-            // Update the elapsed seconds state
-            setElapsed(elapsed);
-        }
-        appState.current = nextAppState;
-    };
-
-    const getElapsedTime = async () => {
-        const startTime = await AsyncStorage.getItem("@start_time");
-        const now = new Date();
-        return differenceInSeconds(now, Date.parse(startTime));
-    };
-
-    const recordStartTime = async () => {
-        const now = new Date();
-        await AsyncStorage.setItem("@start_time", now.toISOString());
-    }; */
+        const interval = setInterval(() => {
+            if (timer) {
+                setCurrentTime(currrentTime+1);
+            }
+        }, 1000);
+        
+        return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
+    }, [])
 
     return (
         <View style={styles.container} >
             <Text style={styles.greeting}>Good Morning!</Text>
-            <MiddleButton text={'Start Working'} textcolor = {colors.white} bgcolor ={colors.purpleBright}/>
-            <TimeBox bgcolor={colors.timeBoxDark}/>
-            <BottomButton text={'My Attendance Report'} textcolor = {colors.black} bgcolor ={colors.purpleLighter}/>
+            <TouchableOpacity onPress={(timer) => setTimer(!timer)} style={[styles.buttonBody, {backgroundColor: colors.purpleBright}]}>
+                <Text style={[ styles.buttonText, {color: colors.white}]}>Start Working!</Text>
+            </TouchableOpacity>
+            <TimeBox bgcolor={colors.timeBoxDark} hrs={'00'} mins={'00'} secs={'00'}/>
+            <BottomButton onPress={() => props.navigation.navigate('Calendar')} text={'My Attendance Report'} textcolor = {colors.black} bgcolor ={colors.purpleLighter}/>
         </View>
     );
 }
@@ -66,6 +50,21 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 30,
         left: 30,
+    },
+    buttonBody: {
+        width: 190,
+        height: 190,
+        borderRadius: 95,
+        alignSelf: 'center',
+        position: 'absolute',
+        top: 130,
+        elevation: 3,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buttonText: {
+        fontSize: 22,
+        fontWeight: 'bold',
     }
 })
 export default HomeStart;

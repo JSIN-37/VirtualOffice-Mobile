@@ -32,7 +32,7 @@ function Login(props) {
             </Pressable>
             <Image style={styles.middleImage} source={require('../assets/higirl.png')}/>
             <TouchableOpacity style={styles.loginButton} onPress={() => props.navigation.navigate('Home')}>
-                <Text style={styles.buttonText}>Sign In</Text>
+                <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
         </View>
     );
