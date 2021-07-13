@@ -69,7 +69,7 @@ function Login(props) {
         onPress={() => {
           var axios = require("axios");
           axios
-            .post("http://192.168.1.2:3030/api/v1/login", {
+            .post("http://34.136.72.132:3030/api/v1/login", {
               email: email,
               password: password,
             })
