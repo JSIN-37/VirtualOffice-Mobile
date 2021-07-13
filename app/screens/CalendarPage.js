@@ -38,7 +38,12 @@ const CalendarPage = (props) => {
             }}
             // Handler which gets executed on day press. Default = undefined
             onDayPress={day => {
-                console.log('selected day', day);
+                props.navigation.navigate('Report', { 
+                    day: day.day,
+                    month: day.month,
+                    year: day.year,
+                    dateString: day.dateString,
+                });
             }}
             // Month format in calendar title. Formatting values: http://arshaw.com/xdate/#Formatting
             monthFormat={'MMMM yyyy'}
@@ -120,7 +125,7 @@ const CalendarPage = (props) => {
             }}
             />
             <Text style={styles.workedDays}>Worked 06 days in July</Text>
-            <BottomButton onPress={() => props.navigation.navigate('Report')} text={'Back to Home'} textcolor = {colors.white} bgcolor ={colors.purpleDull}/>
+            <BottomButton onPress={() => props.navigation.navigate('Home')} text={'Back to Home'} textcolor = {colors.white} bgcolor ={colors.purpleDull}/>
         </View>
     )
 }

@@ -8,14 +8,21 @@ import { BottomButton } from '../components/BottomButton';
 import colors from '../config/colors';
 
 const DailyReport = (props) => {
+    
+    const  months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const  shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const day = props.navigation.getParam('day', '01');
+    const month = props.navigation.getParam('month', '01');
+    const year = props.navigation.getParam('year', '2021');
+
     return (
         <View style={styles.container}>
             <Text style={styles.topText}>Daily Report</Text>
             <View style={styles.reportCard}>
                 <View style={styles.cardTop}>
-                    <Text style={styles.topDate}>01 July, 2021</Text>
-                    <View style={[styles.dayLabel, {backgroundColor: colors.fullday}]}>
-                        <Text style={{color: colors.white}}>Full Day</Text>
+                    <Text style={styles.topDate}>{day} {months[month-1]}, {year}</Text>
+                    <View style={[styles.dayLabel, {backgroundColor: (day === 8) ? colors.halfday : colors.fullday}]}>
+                        <Text style={{color: (day === 8) ? colors.black : colors.white}}>{(day === 8) ? 'Half Day' : 'Full Day'}</Text>
                     </View>
                 </View>
                 <View style={styles.infoCard}>
@@ -39,7 +46,7 @@ const DailyReport = (props) => {
                             color={colors.purpleDark}
                         />
                     </TouchableOpacity>
-                    <Text style={styles.bottomDate}>01 Jul, 2021</Text>
+                    <Text style={styles.bottomDate}>{day} {shortMonths[month-1]}, {year}</Text>
                     <TouchableOpacity style={styles.moveButton}>
                         <Icon name='chevron-right'
                             type='feather'
