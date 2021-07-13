@@ -8,6 +8,7 @@ export default{
     greyTextArea: '#EFEFF0',
     greyText: '#737B7D',
     timeBoxDark: '#374A59',
+    yellowBright: '#FDD33A',
     fullday: '#2CC04D',
     halfday: '#FDD33A',
     today: '#3547E9',

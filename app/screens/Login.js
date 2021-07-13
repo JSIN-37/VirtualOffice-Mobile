@@ -35,7 +35,7 @@ function Login(props) {
       </View>
       <Pressable
         style={styles.anchorButton}
-        onPress={() => Alert.alert("Can't Switch to Sinhala!")}
+        onPress={() => Alert.alert("Can't switch to Sinhala!")}
       >
         <Text style={[styles.anchorText, { paddingTop: 8 }]}>
           Switch to Sinhala
@@ -54,7 +54,7 @@ function Login(props) {
       />
       <Pressable
         style={[styles.anchorButton, { alignSelf: "center" }]}
-        onPress={() => Alert.alert("Can't Sing In now!")}
+        onPress={() => Alert.alert("Please contact the administrator of VirtualOffice.")}
       >
         <Text style={styles.anchorText}>
           Forgot Password or Don't Have an Account?
@@ -77,7 +77,7 @@ function Login(props) {
               let data = res.data;
               // Token should be avail. if successful
               if (data.token) {
-                props.navigation.navigate("Home");
+                props.navigation.navigate("Home", {userToken: data.token});
               } else {
                 Alert.alert("Login failed. Username or password is incorrect.");
               }
