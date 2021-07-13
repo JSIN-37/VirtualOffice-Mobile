@@ -28,15 +28,15 @@ const DailyReport = (props) => {
                 <View style={styles.infoCard}>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Check-In</Text>
-                        <Text style={styles.info}>08:10 AM</Text>
+                        <Text style={styles.info}>{(day === 8) ? '08:30 AM' : '08:10 AM'}</Text>
                     </View>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Check-Out</Text>
-                        <Text style={styles.info}>05:15 PM</Text>
+                        <Text style={styles.info}>{(day === 8) ? '01.45 PM' : '05:15 PM'}</Text>
                     </View>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Work Duration</Text>
-                        <Text style={styles.info}>09:05:12</Text>
+                        <Text style={styles.info}>{(day === 8) ? '05:15:38' : '09:05:12'}</Text>
                     </View>
                 </View>
                 <View style={styles.dateChangeBox}>
