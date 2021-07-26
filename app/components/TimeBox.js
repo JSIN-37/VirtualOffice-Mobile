@@ -4,18 +4,17 @@ import colors from '../config/colors';
 
 const TimeBox = (props) => {
     return (
-        <View style={styles.outerBox}> 
-        <View style={[styles.innerBox, {backgroundColor: props.bgcolor}]}>
+        <View style={[styles.outerBox, {backgroundColor: props.bgcolor}]}> 
+        <View style={styles.innerBox}>
         <Text style={styles.number}>{props.hrs}</Text>
             <Text style={styles.tinyText}>hrs</Text>
         </View>
-        <View style={[styles.innerBox,  {backgroundColor: props.bgcolor}]}>
+        <View style={styles.innerBox}>
+        <Text style={styles.number}>:</Text>      
+        </View>
+        <View style={styles.innerBox}>
         <Text style={styles.number}>{props.mins}</Text>
         <Text style={styles.tinyText}>mins</Text>       
-        </View>
-        <View style={[styles.innerBox,  {backgroundColor: props.bgcolor}]}>
-        <Text style={styles.number}>{props.secs}</Text>
-        <Text style={styles.tinyText}>secs</Text>
         </View>
         </View>
         
@@ -25,26 +24,24 @@ const TimeBox = (props) => {
 const styles = StyleSheet.create({
     outerBox: {
         position: 'absolute',
-        bottom: 215,
-        width: '80%',
+        bottom: 0,
+        width: '100%',
+        height: '45%',
         flexDirection: 'row',
-        justifyContent: 'space-evenly',
+        justifyContent: 'center',
     },
     innerBox: {
-        width: 77,
-        height: 77,
-        elevation: 4,
-        borderRadius: 10,
-        alignItems: 'center',
-        justifyContent: 'center'
+        alignItems: "center",
+        top: 30,
+        paddingHorizontal: 10,
     },
     tinyText: {
         color: colors.white,
-        fontSize: 12,
+        fontSize: 16,
     },
     number: {
         color: colors.white,
-        fontSize: 26,
+        fontSize: 54,
     }
 })
 

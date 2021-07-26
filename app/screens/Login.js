@@ -1,23 +1,65 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { View, Pressable, StyleSheet, Text, TouchableOpacity, Alert, Image, TextInput, Switch} from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import {
-  View,
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  Alert,
-  Image,
-  TextInput,
-  InputAccessoryView,
-} from "react-native";
 import colors from "../config/colors";
-//import { Form, InputText} from 'validate-form-in-expo-style';
+import { eachHourOfInterval } from "date-fns";
+import { LongPressGestureHandler } from "react-native-gesture-handler";
+//import { Form, InputText } from 'validate-form-in-expo-style';
 
 function Login(props) {
+    
   const [email, setEmail] = useState(``);
   const [password, setPassword] = useState(``);
+  const [rememberMe, setRememberMe] = useState(email? true : false);
+
+  useEffect(() => {
+    async function getUserEmail () {
+      const userEmail = await getRememberedUser();
+      console.log(userEmail);
+      console.log(email);
+      setEmail(userEmail || "");
+      setRememberMe(userEmail ? true : false );
+    }
+    getUserEmail();
+  }, []);
+  
+  const toggleRememberMe = value => {
+    setRememberMe(value);
+    if (value === true) {
+    //user wants to be remembered.
+      rememberUser();
+    } else {
+      forgetUser();
+    }
+  }
+
+  async function rememberUser () {
+    try {
+      await AsyncStorage.setItem('user-email', JSON.stringify(email));
+      console.log('remember');
+    } catch (error) {
+      console.log('Remember user error');
+    }
+  };
+
+  async function getRememberedUser () {
+    try {
+      const userEmail = await AsyncStorage.getItem('user-email');
+      return userEmail != null ? JSON.parse(userEmail) : null;
+    } catch (error) {
+      console.log('Get remember user error');
+    }
+  };
+  
+  async function forgetUser () {
+      try {
+        await AsyncStorage.removeItem('user-email');
+      } catch (error) {
+        console.log('Forget user error');
+      }
+  };
 
   return (
     <View style={styles.container}>
@@ -43,7 +85,9 @@ function Login(props) {
       </Pressable>
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        value = {email}
+        keyboardType= "email-address"
+        placeholder= "Email"
         onChangeText={(text) => setEmail(text)}
       />
       <TextInput
@@ -52,24 +96,21 @@ function Login(props) {
         placeholder="Password"
         onChangeText={(text) => setPassword(text)}
       />
-      <Pressable
-        style={[styles.anchorButton, { alignSelf: "center" }]}
-        onPress={() => Alert.alert("Please contact the administrator of VirtualOffice.")}
-      >
-        <Text style={styles.anchorText}>
-          Forgot Password or Don't Have an Account?
-        </Text>
-      </Pressable>
-      <Image
-        style={styles.middleImage}
-        source={require("../assets/higirl.png")}
-      />
+      <View style={styles.rowContainer}>
+        <Switch
+          value={rememberMe}
+          thumbColor = {colors.purpleDull}
+          trackColor = {{false: colors.greyText, true: colors.purpleLight}}
+          onValueChange={(value) => toggleRememberMe(value)}
+        />
+        <Text style={{paddingHorizontal: 5}}>Remember Me</Text>
+      </View>
       <TouchableOpacity
         style={styles.loginButton}
         onPress={() => {
-          var axios = require("axios");
+          let axios = require("axios");
           axios
-            .post("http://34.136.72.132:3030/api/v1/login", {
+            .post("http://35.232.73.124:3040/api/v1/login", {
               email: email,
               password: password,
             })
@@ -86,7 +127,20 @@ function Login(props) {
       >
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
-    </View>
+
+      <Pressable
+        style={[styles.anchorButton, { alignSelf: "center" }]}
+        onPress={() => Alert.alert("Please contact the administrator of VirtualOffice.")}
+      >
+        <Text style={styles.anchorText}>
+          Forgot Password or Don't Have an Account?
+        </Text>
+      </Pressable>
+      <Image
+        style={styles.middleImage}
+        source={require("../assets/higirl.png")}
+      />
+      </View>
   );
 }
 
@@ -100,6 +154,7 @@ const styles = StyleSheet.create({
   },
   rowContainer: {
     flexDirection: "row",
+    alignItems: "center",
   },
   appName: {
     fontFamily: "sans-serif",
@@ -139,8 +194,7 @@ const styles = StyleSheet.create({
     color: colors.purpleText,
   },
   loginButton: {
-    position: "absolute",
-    bottom: 55,
+    marginVertical: 20,
     alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
@@ -160,10 +214,10 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   middleImage: {
-    width: 141,
-    height: 147,
+    width: 148,
+    height: 155,
     alignSelf: "center",
-    top: 100,
+    top: 45,
   },
 });
 
