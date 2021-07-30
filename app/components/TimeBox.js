@@ -4,44 +4,55 @@ import colors from '../config/colors';
 
 const TimeBox = (props) => {
     return (
-        <View style={[styles.outerBox, {backgroundColor: props.bgcolor}]}> 
-        <View style={styles.innerBox}>
-        <Text style={styles.number}>{props.hrs}</Text>
-            <Text style={styles.tinyText}>hrs</Text>
-        </View>
-        <View style={styles.innerBox}>
-        <Text style={styles.number}>:</Text>      
-        </View>
-        <View style={styles.innerBox}>
-        <Text style={styles.number}>{props.mins}</Text>
-        <Text style={styles.tinyText}>mins</Text>       
-        </View>
-        </View>
-        
+        <View style={styles.outerBox}>
+            <View style={styles.innerBox}>
+                <Text style={styles.timeMain}>{props.hrs}</Text>
+                <Text style={styles.tinyText}>hrs</Text>
+            </View>
+            <View style={styles.innerBox}>
+                <Text style={styles.timeMain}>:</Text>
+            </View>
+            <View style={styles.innerBox}>
+                <Text style={styles.timeMain}>{props.mins}</Text>
+                <Text style={styles.tinyText}>mins</Text>
+            </View>
+            <View style={styles.secsBoxOut}>
+                <View style={styles.secsBoxIn}>
+                    <Text style={styles.timeSecs}>{props.secs}</Text>
+                </View>
+            </View>
+        </View>        
     )
 }
 
 const styles = StyleSheet.create({
     outerBox: {
-        position: 'absolute',
-        bottom: 0,
-        width: '100%',
-        height: '45%',
         flexDirection: 'row',
-        justifyContent: 'center',
+        width: '100%',
+        justifyContent: 'center', 
     },
     innerBox: {
         alignItems: "center",
-        top: 30,
-        paddingHorizontal: 10,
+        paddingHorizontal: 5,
+    },
+    timeMain: {
+        fontSize: 56,
+        fontWeight: 'bold',
+    },
+    timeSecs: {
+        fontSize: 24,
+        color: colors.greyText,
+    },
+    secsBoxOut: {
+        justifyContent: 'center',
+    },
+    secsBoxIn: {
+        height: 35,
+        justifyContent: 'flex-end',
     },
     tinyText: {
-        color: colors.white,
+        color: colors.greyText,
         fontSize: 16,
-    },
-    number: {
-        color: colors.white,
-        fontSize: 54,
     }
 })
 

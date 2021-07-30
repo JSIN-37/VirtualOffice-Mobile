@@ -107,10 +107,10 @@ function Login(props) {
       </View>
       <TouchableOpacity
         style={styles.loginButton}
-        onPress={() => {
-          let axios = require("axios");
+        onPress={() => { props.navigation.navigate("Home");
+          /* let axios = require("axios");
           axios
-            .post("http://35.232.73.124:3040/api/v1/login", {
+            .post("http://35.232.73.124:3040/api/v1/docs/#/User/post_user_login", {
               email: email,
               password: password,
             })
@@ -122,7 +122,7 @@ function Login(props) {
               } else {
                 Alert.alert("Login failed. Username or password is incorrect.");
               }
-            });
+            }); */
         }}
       >
         <Text style={styles.buttonText}>Login</Text>
