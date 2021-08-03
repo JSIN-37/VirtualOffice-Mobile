@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect} from 'react';
 import axios from 'axios';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Alert } from 'react-native';
 import { TimeBox } from '../components/TimeBox';
@@ -18,7 +18,8 @@ function HomeStart(props) {
     const [workedHours, setWorkedHours] = useState(0);
     const [workedMins, setWorkedMins] = useState(0);
     const [workedSecs, setWorkedSecs] = useState(0);
-    const [fullDay, setfullDay] = useState(false);
+    const [fullDay, setFullDay] = useState(false);
+    const [checkoutHappened, setCheckoutHappened] = useState(false);
     const [greeting, setGreeting] = useState('null');
     const [buttonText, setButtonText] = useState('Start Working!');
     const [buttonColor, setButtonColor] = useState(colors.purpleBright);
@@ -29,12 +30,25 @@ function HomeStart(props) {
     const [progressColor, setProgressColor] = useState(colors.greyText);
     const [progressRate, setProgressRate] = useState(0);
 
+    const todayShift = {
+        checkin: "",
+        checkout: "",
+        workHours: 10,
+        workMins: 45,
+        fullDay: true,
+    }
+    //const todayShift = getTodayData();
+
     //Send data to the backend after log the check-out
     const sendTodayData = (finishTime) => {
         axios
         .post("http://35.232.73.124:3040/api/v1/docs/#/User", {
             checkin: startTime,
             checkout: finishTime,
+            workHours: workedHours,
+            workMins: workedMins,
+            workSecs: workedSecs,
+            fullDay: fullDay, 
         })
         .then((response) => {
             console.log(response);
@@ -48,7 +62,8 @@ function HomeStart(props) {
         axios
         .get("http://35.232.73.124:3040/api/v1/docs/#/User")
         .then((res) => {
-            let data = res.data; //data should include check-in time, check-out time, if the person has already done a check-in/check-out today
+            let data = res.data;
+            return data; //data should include check-in time, check-out time, if the person has already done a check-in/check-out today
         }, (error) => {
             console.log(error);
         });
@@ -167,6 +182,8 @@ function HomeStart(props) {
                 console.log(checkin);
                 setStartTime(checkin);
                 setWorking(true);
+            } else if (todayShift != null) {
+                setCheckoutHappened(true);
             }
         } catch (error) {
             console.log('Check start working error');
@@ -296,6 +313,7 @@ function HomeStart(props) {
         /* let currentLocation = await Location.getCurrentPositionAsync({enableHighAccuracy: true, timeout: 20000, maximumAge: 6000});
         setLocation(currentLocation);
         console.log(currentLocation); */
+        setFullDay(workedHours < 10 ? false : true);
         setWorking(false); 
         setFinishTime(new Date().getTime());
 //        sendTodayData(new Date().getTime());
@@ -325,7 +343,7 @@ function HomeStart(props) {
             mins = {`${workedMins.toString().length === 1 ? "0"+workedMins : workedMins}`}
             secs = {` ${workedSecs.toString().length === 1 ? "0"+workedSecs : workedSecs}`}
             />
-            <BottomButton onPress={() => props.navigation.navigate('Calendar')} text={'My Attendance Report'} textcolor = {colors.black} bgcolor ={colors.purpleLighter}/>
+            <BottomButton onPress={() => props.navigation.navigate('Calendar', {userToken: props.navigation.getParam('userToken')})} text={'My Attendance Report'} textcolor = {colors.black} bgcolor ={colors.purpleLighter}/>
         </View>
     );
 }

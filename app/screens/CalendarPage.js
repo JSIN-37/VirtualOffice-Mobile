@@ -1,13 +1,62 @@
 import React from 'react';
 import { Calendar } from 'react-native-calendars';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text,useEffect, useState } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { BottomButton } from '../components/BottomButton';
 import colors from '../config/colors';
 
 const CalendarPage = (props) => {
+
+    let markedDay = {};
+    //Dummy data... this type of data set should be taken from the backend
+    const calendar = 
+        [
+            {
+                "date" : "2021-07-10",
+                "fullDay" : true,
+            },
+            {
+                "date" : "2021-07-21",
+                "fullDay" : true,
+            },
+            {
+                "date" : "2021-07-22",
+                "fullDay" : false,
+            },
+            {
+                "date" : "2021-08-02",
+                "fullDay" : false,
+            },
+        ];
+//    const calendar = getWorkedDates();
     
-    const fullday = {key: 'fullday', color: 'black', selectedColor: 'black'};
+    //set the markedDay object to color the calendar according to the backend results
+    calendar.map((item) => {
+        markedDay[item.date] = {
+            customStyles: {
+                container: {
+                    backgroundColor: item.fullDay ? colors.fullday : colors.halfday,
+                },
+                text: {
+                    color: item.fullDay ? colors.white : colors.black,
+                    fontWeight: 'bold'
+                }
+            }
+        };
+    });
+
+    //Get all the worked days alone with the label halfday/fullday until today
+    const getWorkedDates = () => {
+        axios
+        .get("http://35.232.73.124:3040/api/v1/docs/#/User")
+        .then((res) => {
+            let data = res.data;
+            return data; //data should include check-in time, check-out time, if the person has already done a check-in/check-out today
+        }, (error) => {
+            console.log(error);
+        });
+    };
+    
     return (
         <View style={styles.container}>
             <Text style={styles.topText}>Attendance Reports</Text>
@@ -38,6 +87,7 @@ const CalendarPage = (props) => {
             }}
             // Handler which gets executed on day press. Default = undefined
             onDayPress={day => {
+                console.log(day);
                 props.navigation.navigate('Report', { 
                     day: day.day,
                     month: day.month,
@@ -67,64 +117,9 @@ const CalendarPage = (props) => {
             // If firstDay=1 week starts from Monday. Note that dayNames and dayNamesShort should still start from Sunday.
             firstDay={1}            
             markingType={'custom'}
-            markedDates={{
-                '2021-07-01': {customStyles: {
-                    container: {
-                    backgroundColor: colors.fullday,
-                    },
-                    text: {
-                    color: colors.white,
-                    fontWeight: 'bold'
-                    }
-                }},
-                '2021-07-02': {customStyles: {
-                    container: {
-                    backgroundColor: colors.fullday,
-                    },
-                    text: {
-                    color: colors.white,
-                    fontWeight: 'bold'
-                    }
-                }},
-                '2021-07-06': {customStyles: {
-                    container: {
-                    backgroundColor: colors.fullday,
-                    },
-                    text: {
-                    color: colors.white,
-                    fontWeight: 'bold'
-                    }
-                }},
-                '2021-07-07': {customStyles: {
-                    container: {
-                    backgroundColor: colors.fullday,
-                    },
-                    text: {
-                    color: colors.white,
-                    fontWeight: 'bold'
-                    }
-                }},
-                '2021-07-08': {customStyles: {
-                    container: {
-                    backgroundColor: colors.halfday,
-                    },
-                    text: {
-                    color: colors.black,
-                    fontWeight: 'bold'
-                    }
-                }},
-                '2021-07-09': {customStyles: {
-                    container: {
-                    backgroundColor: colors.fullday,
-                    },
-                    text: {
-                    color: colors.white,
-                    fontWeight: 'bold'
-                    }
-                }},
-            }}
+            markedDates={ markedDay }
             />
-            <Text style={styles.workedDays}>Worked 06 days in July</Text>
+            <Text style={styles.workedDays}>{`Worked 06 days in July` }</Text>
             <BottomButton onPress={() => props.navigation.navigate('Home')} text={'Back to Home'} textcolor = {colors.white} bgcolor ={colors.purpleDull}/>
         </View>
     )

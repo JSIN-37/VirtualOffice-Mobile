@@ -1,8 +1,8 @@
-import React from 'react';
-import { Pressable } from 'react-native';
+import React, { useState, useEffect} from 'react';
+import axios from 'axios';
 import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { runOnJS } from 'react-native-reanimated';
+import * as Localization from 'expo-localization';
 import { BottomButton } from '../components/BottomButton';
 
 import colors from '../config/colors';
@@ -11,43 +11,158 @@ const DailyReport = (props) => {
     
     const  months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const  shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const day = props.navigation.getParam('day', '01');
-    const month = props.navigation.getParam('month', '01');
-    const year = props.navigation.getParam('year', '2021');
+
+    const [day, setDay] = useState(props.navigation.getParam('day', 1));
+    const [month, setMonth] = useState(props.navigation.getParam('month', 1));
+    const [year, setYear] = useState(props.navigation.getParam('year', 2021));
+    const [dateString, setDateString] = useState(props.navigation.getParam('dateString', "2021-01-01"));
+
+    const [checkin, setCheckin] = useState('--');
+    const [checkout, setCheckout] = useState('--');
+    const [workDuration, setWorkDuration] = useState('--');
+
+    const [dayLabelColor, setDayLabelColor] = useState(colors.greyTextArea);
+    const [dayLabelText, setDayLabelText] = useState('Off Day');
+    const [dayLabelTextColor, setDayLabelTextColor] = useState(colors.black);
+
+    //when the date get changed the daily report should be updated according to the date
+    useEffect(() => {
+        updateReport();
+    }, [dateString])
+    
+    //return the necessary data to be displayed in the daily report for the selected date
+    const getDailyReport = () => {
+        axios
+        .get("http://35.232.73.124:3040/api/v1/docs/#/User", { date: dateString })
+        .then((res) => {
+            let data = res.data;
+            return data; //data should include check-in & check-out time (in msec), worked hours, worked mins, fullDay (true/false)
+        }, (error) => {
+            console.log(error);
+        });
+    };
+
+    const updateReport = () => {
+        //const data = getDailyReport();
+
+        //dummy data... till the backend function is developed
+        const data = {
+            checkin: 1627960036705,
+            checkout: 1627993736705,
+            workHours: Math.floor(Math.random() * 10)+1,
+            workMins: Math.floor(Math.random() * 60)+1,
+            workSecs: Math.floor(Math.random() * 60)+1,
+            fullDay: Math.floor(Math.random() * 10) > Math.floor(Math.random() * 10)     
+        };
+
+        if (data != null){
+            const checkinString = getTimeString(data.checkin);
+            const checkoutString = getTimeString(data.checkout);
+            setCheckin(checkinString);
+            setCheckout(checkoutString);
+            const durationString = getDurationString(data.workHours, data.workMins, data.workSecs);
+            setWorkDuration(durationString);
+            updateDayLabel(data.fullDay);
+        } else {
+            setCheckin('--');
+            setCheckout('--');
+            setWorkDuration('00:00:00');
+            setDayLabelColor(colors.greyTextArea);
+            setDayLabelText('Off Day');
+            setDayLabelText(colors.black);
+        }
+    }
+    
+    //forming time label
+    const getTimeString = (msecs) => {
+        let [hrs, mins, secs] = msecsToLocalTime(msecs);
+        let timeLabel = hrs > 11 ? 'PM' : 'AM';
+        hrs = hrs > 12 ? hrs - 12 : hrs;
+        let timeString = `${hrs.toString().length == 1 ? "0"+hrs : hrs}:${mins} ${timeLabel}`;
+        return timeString;
+    }
+
+    //forming duration label
+    const getDurationString = (hrs, mins, secs) => {
+        let duration = `${hrs.toString().length == 1 ? "0"+hrs : hrs}:${mins.toString().length == 1 ? "0"+mins : mins}:${secs.toString().length == 1 ? "0"+secs : secs}`;
+        return duration;
+    }
+    
+    //converts msecs to hrs, mins, secs
+    const msecsToLocalTime = (time) => {
+        let dateStamp = new Date(time);
+        let timePortion = dateStamp.toLocaleString('en-US', { timeZone: Localization.timezone }).split(/[ ]+/)[3];
+        let timeArray = timePortion.split(':');
+        timeArray.map((item)=> parseInt(item, 10));
+        return timeArray;
+    }
+
+    //update the full day/ halfday bael when the date changes
+    const updateDayLabel = (isFullDay) => {
+        if (isFullDay){
+            setDayLabelColor(colors.fullday);
+            setDayLabelText('Full Day');
+            setDayLabelTextColor(colors.white);
+        } else {
+            setDayLabelColor(colors.halfday);
+            setDayLabelText('Half Day');
+            setDayLabelTextColor(colors.black);
+        }
+    }
+    
+    //View the previous day report
+    const prevDate = () => {
+        let currentDate = new Date(dateString);
+        currentDate.setDate(currentDate.getDate() - 1);
+        setDay(currentDate.getDate());
+        setMonth(currentDate.getMonth()+1);
+        setYear(currentDate.getFullYear());
+        setDateString(currentDate.toISOString().split('T')[0]);
+    }
+
+    //View the next day report
+    const nextDate = () => {
+        let currentDate = new Date(dateString);
+        currentDate.setDate(currentDate.getDate() + 1);
+        setDay(currentDate.getDate());
+        setMonth(currentDate.getMonth()+1);
+        setYear(currentDate.getFullYear());
+        setDateString(currentDate.toISOString().split('T')[0]);
+    }
 
     return (
         <View style={styles.container}>
             <Text style={styles.topText}>Daily Report</Text>
             <View style={styles.reportCard}>
                 <View style={styles.cardTop}>
-                    <Text style={styles.topDate}>{day} {months[month-1]}, {year}</Text>
-                    <View style={[styles.dayLabel, {backgroundColor: (day === 8) ? colors.halfday : colors.fullday}]}>
-                        <Text style={{color: (day === 8) ? colors.black : colors.white}}>{(day === 8) ? 'Half Day' : 'Full Day'}</Text>
+                    <Text style={styles.topDate}>{`${day.toString().length == 1 ? "0"+day : day}`} {months[month-1]}, {year}</Text>
+                    <View style={[styles.dayLabel, {backgroundColor: dayLabelColor}]}>
+                        <Text style={{color: dayLabelTextColor}}>{dayLabelText}</Text>
                     </View>
                 </View>
                 <View style={styles.infoCard}>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Check-In</Text>
-                        <Text style={styles.info}>{(day === 8) ? '08:30 AM' : '08:10 AM'}</Text>
+                        <Text style={styles.info}>{checkin}</Text>
                     </View>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Check-Out</Text>
-                        <Text style={styles.info}>{(day === 8) ? '01.45 PM' : '05:15 PM'}</Text>
+                        <Text style={styles.info}>{checkout}</Text>
                     </View>
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Work Duration</Text>
-                        <Text style={styles.info}>{(day === 8) ? '05:15:38' : '09:05:12'}</Text>
+                        <Text style={styles.info}>{workDuration}</Text>
                     </View>
                 </View>
                 <View style={styles.dateChangeBox}>
-                    <TouchableOpacity style={styles.moveButton}>
+                    <TouchableOpacity style={styles.moveButton} onPress = {prevDate}>
                         <Icon name='chevron-left'
                             type='feather'
                             color={colors.purpleDark}
                         />
                     </TouchableOpacity>
-                    <Text style={styles.bottomDate}>{day} {shortMonths[month-1]}, {year}</Text>
-                    <TouchableOpacity style={styles.moveButton}>
+                    <Text style={styles.bottomDate}>{`${day.toString().length == 1 ? "0"+day : day}`} {shortMonths[month-1]}, {year}</Text>
+                    <TouchableOpacity style={styles.moveButton} onPress = {nextDate}>
                         <Icon name='chevron-right'
                             type='feather'
                             color={colors.purpleDark}
