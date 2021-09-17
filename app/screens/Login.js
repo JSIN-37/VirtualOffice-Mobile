@@ -35,6 +35,24 @@ function Login(props) {
     }
   }
 
+  const loginPass = () => { 
+    let axios = require("axios");
+    axios
+      .post(`${global.backendURL}user/login`, {
+        email: email,
+        password: password,
+      })
+      .then((res) => {
+        let data = res.data;
+        // Token should be avail. if successful
+        if (data.token) {
+          props.navigation.navigate("Home", {userToken: data.token});
+        } else {
+          Alert.alert("Login failed. Username or password is incorrect.");
+        }
+      });
+  }
+
   async function rememberUser () {
     try {
       await AsyncStorage.setItem('user-email', JSON.stringify(email));
@@ -107,23 +125,7 @@ function Login(props) {
       </View>
       <TouchableOpacity
         style={styles.loginButton}
-        onPress={() => { props.navigation.navigate("Home");
-          /* let axios = require("axios");
-          axios
-            .post("http://35.232.73.124:3040/api/v1/docs/#/User/post_user_login", {
-              email: email,
-              password: password,
-            })
-            .then((res) => {
-              let data = res.data;
-              // Token should be avail. if successful
-              if (data.token) {
-                props.navigation.navigate("Home", {userToken: data.token});
-              } else {
-                Alert.alert("Login failed. Username or password is incorrect.");
-              }
-            }); */
-        }}
+        onPress={loginPass}
       >
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>

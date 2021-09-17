@@ -6,6 +6,8 @@ import DailyReport from './app/screens/DailyReport';
 import { createStackNavigator } from 'react-navigation-stack';
 import { createAppContainer } from 'react-navigation';
 
+global.backendURL = "http://vo.zx-software.com:3040/api/v1/";
+
 const RootStack = createStackNavigator({
   Login: {
     screen: Login

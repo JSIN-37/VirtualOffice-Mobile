@@ -3,9 +3,12 @@ import axios from 'axios';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Alert } from 'react-native';
 import { TimeBox } from '../components/TimeBox';
 import { BottomButton } from '../components/BottomButton';
+import { WorkDone } from '../components/WorkDone';
+import { CheckinRecord } from '../components/CheckinRecord';
 import * as Location from 'expo-location';
-import { ProgressBar, Colors } from 'react-native-paper';
+import { ProgressBar } from 'react-native-paper';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
 
 import colors from '../config/colors';
 
@@ -15,6 +18,7 @@ function HomeStart(props) {
     const [lastKnowDate, setLastKnowDate] = useState();
     const [startTime, setStartTime] = useState(0);
     const [finishTime, setFinishTime] = useState(0);
+    const [todayShift, setTodayShift] = useState(null);
     const [workedHours, setWorkedHours] = useState(0);
     const [workedMins, setWorkedMins] = useState(0);
     const [workedSecs, setWorkedSecs] = useState(0);
@@ -30,14 +34,64 @@ function HomeStart(props) {
     const [progressColor, setProgressColor] = useState(colors.greyText);
     const [progressRate, setProgressRate] = useState(0);
 
-    const todayShift = {
-        checkin: "",
-        checkout: "",
+    /* let todayShift = {
+        checkin: 1627960036705,
+        checkout: 1627993736705,
         workHours: 10,
-        workMins: 45,
+        workMins: 5,
+        workSecs: 45,
         fullDay: true,
-    }
+    } */
+    //let todayShift = null;
     //const todayShift = getTodayData();
+    const logCheckin = async () => {
+        const config = {
+            headers: { Authorization: `Bearer ${props.navigation.getParam('userToken')}` },
+        };
+        await axios
+        .post(`${global.backendURL}user/checkin`, {
+                location: "testLocationCheckin" 
+            }, 
+            config
+        )
+        .then((res) => {
+            let data = res.data;
+            if (data) {
+                rememberWorklogId(data.id);
+                setStartTime(data.start_time);
+                setWorking(true);
+                rememberKnownDate();
+                rememberCheckInTime(data.start_time);
+            }else{
+                console.log("error here");
+            }
+            
+        })
+        .catch (error => {
+            console.log(error);
+        });
+    };
+
+    const logCheckout = async () => {
+        const config = {
+            headers: { Authorization: `Bearer ${props.navigation.getParam('userToken')}` },
+        };
+        const worklogId = await getWorklogId();
+        await axios
+        .post(`${global.backendURL}user/checkout`, {
+                location: "testLocationCheckout",
+                id: worklogId,
+            }, 
+            config
+        )
+        .then((res) => {
+            console.log(res.data);
+        }, (error) => {
+            console.log(error);
+        });
+        getTodayData();
+    };
+    
 
     //Send data to the backend after log the check-out
     const sendTodayData = (finishTime) => {
@@ -57,14 +111,19 @@ function HomeStart(props) {
         });
     };
 
-    //Get the response from the backend whether the person has logged a check-in/check-out today
+    //Get the response from the backend whether the person has a log today
     const getTodayData = () => {
+        const config = {
+            headers: { Authorization: `Bearer ${props.navigation.getParam('userToken')}` },
+        };
         axios
-        .get("http://35.232.73.124:3040/api/v1/docs/#/User")
+        .get(`${global.backendURL}user/checkcheckin`, config)
         .then((res) => {
             let data = res.data;
-            return data; //data should include check-in time, check-out time, if the person has already done a check-in/check-out today
-        }, (error) => {
+            console.log(data);
+            setTodayShift(data); //data should include check-in time, check-out time, if the person has already done a check-in/check-out today
+        })
+        .catch (error => {
             console.log(error);
         });
     };
@@ -72,6 +131,7 @@ function HomeStart(props) {
     useEffect(() => {
         checkGreeting();
         checkStartWorking();
+        
     }, []); 
 
     //setting greeting message
@@ -118,7 +178,7 @@ function HomeStart(props) {
     useEffect(() => {
         const interval = setInterval(() => {
             if (working) {
-                let diff = new Date().getTime() - startTime;
+                let diff = Math.round(new Date().getTime() / 1000) - startTime;
                 console.log(diff);
                 calculateHoursMins(diff);
                 updateProgress(diff);
@@ -128,12 +188,22 @@ function HomeStart(props) {
         return () => clearInterval(interval); // This represents the unmount function, in which you need to clear your interval to prevent memory leaks.
     }, [working, startTime]);
 
+    useEffect(() => {
+        if (todayShift){
+            console.log(todayShift);
+            setCheckoutHappened(true);
+            calculateHoursMins(todayShift.end_time-todayShift.start_time);
+        }else{
+            console.log("hearerf");
+        }
+    }, [todayShift])
+
     //calculate work progress
-    const updateProgress = (msec) => {
+    const updateProgress = (sec) => {
         let progress;
-        let workedTime = msec;
-        if (workedTime < 36000){
-            progress = workedTime / 36000; //10*60*60 (Assuming full time -> 10 hours)
+        let workedTime = sec;
+        if (workedTime < 36){
+            progress = workedTime / 36; //10*60*60 (Assuming full time -> 10 hours)
         }else{
             progress = 1;
         }
@@ -161,16 +231,14 @@ function HomeStart(props) {
     }
 
     //calculate the hours and mins worked so far
-    const calculateHoursMins = (msec) => {
-        let hrs= Math.floor(msec / 1000 / 60 / 60);
-        msec -= hrs * 1000 * 60 * 60;
-        let mins = Math.floor(msec / 1000 / 60);
-        msec -= mins * 1000 * 60;
-        let secs = Math.floor(msec / 1000);
-        msec -= secs * 1000;
+    const calculateHoursMins = (sec) => {
+        let hrs = Math.floor(sec / 60 / 60);
+        sec -= hrs * 60 * 60;
+        let mins = Math.floor(sec / 60);
+        sec -= mins * 60;
         setWorkedHours(hrs);
         setWorkedMins(mins);
-        setWorkedSecs(secs);
+        setWorkedSecs(sec);
     }
 
     //update the state of work if the check-in happened today
@@ -182,8 +250,8 @@ function HomeStart(props) {
                 console.log(checkin);
                 setStartTime(checkin);
                 setWorking(true);
-            } else if (todayShift != null) {
-                setCheckoutHappened(true);
+            } else {
+                getTodayData();             
             }
         } catch (error) {
             console.log('Check start working error');
@@ -202,6 +270,30 @@ function HomeStart(props) {
         } catch (error) {
             console.log('Check start working error');
         }
+    }
+
+    //forming time label
+    const getTimeString = (sec) => {
+        let [hrs, mins, secs] = msecsToLocalTime(sec * 1000);
+        let timeLabel = hrs > 11 ? 'PM' : 'AM';
+        hrs = hrs > 12 ? hrs - 12 : hrs;
+        let timeString = `${hrs.toString().length == 1 ? "0"+hrs : hrs}:${mins} ${timeLabel}`;
+        return timeString;
+    }
+
+    //forming duration label
+    const getDurationString = (hrs, mins, secs) => {
+        let duration = `${hrs.toString().length == 1 ? "0"+hrs : hrs}:${mins.toString().length == 1 ? "0"+mins : mins}:${secs.toString().length == 1 ? "0"+secs : secs}`;
+        return duration;
+    }
+
+    //converts msecs to hrs, mins, secs
+    const msecsToLocalTime = (time) => {
+        let dateStamp = new Date(time);
+        let timePortion = dateStamp.toLocaleString('en-US', { timeZone: Localization.timezone }).split(/[ ]+/)[3];
+        let timeArray = timePortion.split(':');
+        timeArray.map((item)=> parseInt(item, 10));
+        return timeArray;
     }
 
     //store the date in async storage when start working (to avaid check-in twice in the same day.)
@@ -234,6 +326,16 @@ function HomeStart(props) {
         }
     };
 
+    //Save worklog id for today's log
+    async function rememberWorklogId (id) {
+        try {
+          await AsyncStorage.setItem('worklogId', JSON.stringify(id));
+          console.log('remember');
+        } catch (error) {
+          console.log('Remember checkin time error');
+        }
+    };
+
     //get last known check-in time
     async function getCheckInTime () {
         try {
@@ -241,6 +343,16 @@ function HomeStart(props) {
             return checkin != null ? JSON.parse(checkin) : 0;
         } catch (error) {
             console.log('Get checkin time error');
+        }
+    }
+
+    //get worklog id
+    async function getWorklogId () {
+        try {
+            let logId = await AsyncStorage.getItem('worklogId');
+            return logId != null ? JSON.parse(logId) : null;
+        } catch (error) {
+            console.log('get worklog id error');
         }
     }
 
@@ -293,13 +405,10 @@ function HomeStart(props) {
             setErrorMessage('Permission to access location was denied');
             return;
         }
-        console.log('here1');
+        console.log(props.navigation.getParam('userToken'));
+        logCheckin();
         /* let currentLocation = await Location.getCurrentPositionAsync({enableHighAccuracy: true, timeout: 20000, maximumAge: 6000});
         setLocation(currentLocation); */
-        setWorking(true); 
-        setStartTime(new Date().getTime());
-        rememberCheckInTime(new Date().getTime());
-        rememberKnownDate();
     }
 
     const stopWorkingAsync = async () => {
@@ -309,7 +418,7 @@ function HomeStart(props) {
             setErrorMessage('Permission to access location was denied');
             return;
         }
-        console.log('here1');
+        logCheckout();
         /* let currentLocation = await Location.getCurrentPositionAsync({enableHighAccuracy: true, timeout: 20000, maximumAge: 6000});
         setLocation(currentLocation);
         console.log(currentLocation); */
@@ -326,23 +435,46 @@ function HomeStart(props) {
                 <Text style={styles.greeting}>{greeting}</Text>
             </View>
             <View style={[styles.rowContainer, {justifyContent: 'center'}]}>
-                <TouchableOpacity onPress={showConfirmDialog} style={[styles.buttonBody, {backgroundColor: buttonColor}]}>
-                    <Text style={[ styles.buttonText, {color: buttonTextColor}]}>{buttonText}</Text>
-                </TouchableOpacity>
+                {checkoutHappened ? (
+                    <WorkDone />
+                ) : (
+                    <TouchableOpacity onPress={showConfirmDialog} style={[styles.buttonBody, {backgroundColor: buttonColor}]}>
+                        <Text style={[ styles.buttonText, {color: buttonTextColor}]}>{buttonText}</Text>
+                    </TouchableOpacity>
+                )}
             </View>
-            <View style={[styles.rowContainer, {justifyContent: 'center'}]}>
-                {working ? (
-                <ProgressBar style={styles.progress} 
-                    borderRadius={30} 
-                    duration={1000} 
-                    progress={progressRate} 
-                    color={progressColor} 
-                />) : null}      
-            </View>
-            <TimeBox hrs = {`${workedHours.toString().length === 1 ? "0"+workedHours : workedHours}`} 
-            mins = {`${workedMins.toString().length === 1 ? "0"+workedMins : workedMins}`}
-            secs = {` ${workedSecs.toString().length === 1 ? "0"+workedSecs : workedSecs}`}
-            />
+            {checkoutHappened ? (
+                    <View style={styles.textBox}>
+                        <Text style={styles.doneText}>
+                            You have completed your shift today!
+                        </Text>
+                    </View>
+                ) : (
+                    <View style={[styles.rowContainer, {justifyContent: 'center'}]}>
+                        {working ? (
+                        <ProgressBar style={styles.progress} 
+                            borderRadius={30} 
+                            duration={1000} 
+                            progress={progressRate} 
+                            color={progressColor} 
+                        />) : null}                     
+                    </View>
+                )
+            } 
+            
+            {checkoutHappened ? (
+                <CheckinRecord checkin = {getTimeString(todayShift.start_time)} 
+                    checkout = {getTimeString(todayShift.end_time)} 
+                    workDuration = {getDurationString(workedHours, workedMins, workedSecs)} 
+                    boxColor = {colors.fullday}
+                />
+            ) : (
+                <TimeBox hrs = {`${workedHours.toString().length === 1 ? "0"+workedHours : workedHours}`} 
+                    mins = {`${workedMins.toString().length === 1 ? "0"+workedMins : workedMins}`}
+                    secs = {` ${workedSecs.toString().length === 1 ? "0"+workedSecs : workedSecs}`}
+                />
+            )}
+            
             <BottomButton onPress={() => props.navigation.navigate('Calendar', {userToken: props.navigation.getParam('userToken')})} text={'My Attendance Report'} textcolor = {colors.black} bgcolor ={colors.purpleLighter}/>
         </View>
     );
@@ -378,6 +510,14 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         height: 15,
         width: Dimensions.get('window').width - 70,
+    },
+    doneText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        alignSelf: 'center',
+    },
+    textBox: {
+        paddingVertical: 12,
     }
 })
 export default HomeStart;
