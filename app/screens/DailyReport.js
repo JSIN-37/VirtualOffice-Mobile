@@ -21,6 +21,10 @@ const DailyReport = (props) => {
     const [checkout, setCheckout] = useState('--');
     const [workDuration, setWorkDuration] = useState('--');
 
+    const [workedHours, setWorkedHours] = useState(0);
+    const [workedMins, setWorkedMins] = useState(0);
+    const [workedSecs, setWorkedSecs] = useState(0);
+
     const [dayLabelColor, setDayLabelColor] = useState(colors.greyTextArea);
     const [dayLabelText, setDayLabelText] = useState('Off Day');
     const [dayLabelTextColor, setDayLabelTextColor] = useState(colors.black);
@@ -29,11 +33,22 @@ const DailyReport = (props) => {
     useEffect(() => {
         updateReport();
     }, [dateString])
+
+    //when workedsecs changed update the new work duration string to be displayed in the report card
+    useEffect(() => {
+        setTimeout(function () {
+            let durationString = getDurationString(workedHours, workedMins, workedSecs);
+            setWorkDuration(durationString);
+        }, 100)
+    }, [workedSecs])
     
     //return the necessary data to be displayed in the daily report for the selected date
     const getDailyReport = () => {
+        const config = {
+            headers: { Authorization: `Bearer ${props.navigation.getParam('userToken')}` },
+        };
         axios
-        .get("http://35.232.73.124:3040/api/v1/docs/#/User", { date: dateString })
+        .get("http://35.232.73.124:3040/api/v1/docs/#/User", { date: dateString }, config)
         .then((res) => {
             let data = res.data;
             return data; //data should include check-in & check-out time (in msec), worked hours, worked mins, fullDay (true/false)
@@ -47,22 +62,22 @@ const DailyReport = (props) => {
 
         //dummy data... till the backend function is developed
         const data = {
-            checkin: 1627960036705,
-            checkout: 1627993736705,
+            checkin: 1627960036,
+            checkout: 1627993736,
             workHours: Math.floor(Math.random() * 10)+1,
             workMins: Math.floor(Math.random() * 60)+1,
             workSecs: Math.floor(Math.random() * 60)+1,
-            fullDay: Math.floor(Math.random() * 10) > Math.floor(Math.random() * 10)     
+            full_half: Math.floor(Math.random() * 10) > Math.floor(Math.random() * 10)     
         };
 
         if (data != null){
+            let timeDiff = data.checkout - data.checkin;
+            calculateHoursMins(timeDiff);
             const checkinString = getTimeString(data.checkin);
             const checkoutString = getTimeString(data.checkout);
             setCheckin(checkinString);
             setCheckout(checkoutString);
-            const durationString = getDurationString(data.workHours, data.workMins, data.workSecs);
-            setWorkDuration(durationString);
-            updateDayLabel(data.fullDay);
+            updateDayLabel(data.full_half);
         } else {
             setCheckin('--');
             setCheckout('--');
@@ -74,8 +89,8 @@ const DailyReport = (props) => {
     }
     
     //forming time label
-    const getTimeString = (msecs) => {
-        let [hrs, mins, secs] = msecsToLocalTime(msecs);
+    const getTimeString = (sec) => {
+        let [hrs, mins, secs] = msecsToLocalTime(sec * 1000);
         let timeLabel = hrs > 11 ? 'PM' : 'AM';
         hrs = hrs > 12 ? hrs - 12 : hrs;
         let timeString = `${hrs.toString().length == 1 ? "0"+hrs : hrs}:${mins} ${timeLabel}`;
@@ -95,6 +110,17 @@ const DailyReport = (props) => {
         let timeArray = timePortion.split(':');
         timeArray.map((item)=> parseInt(item, 10));
         return timeArray;
+    }
+
+    //calculate the hours and mins worked so far
+    const calculateHoursMins = (sec) => {
+        let hrs = Math.floor(sec / 60 / 60);
+        sec -= hrs * 60 * 60;
+        let mins = Math.floor(sec / 60);
+        sec -= mins * 60;
+        setWorkedHours(hrs);
+        setWorkedMins(mins);
+        setWorkedSecs(sec);
     }
 
     //update the full day/ halfday bael when the date changes

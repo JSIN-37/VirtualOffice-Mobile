@@ -92,25 +92,6 @@ function HomeStart(props) {
         getTodayData();
     };
     
-
-    //Send data to the backend after log the check-out
-    const sendTodayData = (finishTime) => {
-        axios
-        .post("http://35.232.73.124:3040/api/v1/docs/#/User", {
-            checkin: startTime,
-            checkout: finishTime,
-            workHours: workedHours,
-            workMins: workedMins,
-            workSecs: workedSecs,
-            fullDay: fullDay, 
-        })
-        .then((response) => {
-            console.log(response);
-        }, (error) => {
-            console.log(error);
-        });
-    };
-
     //Get the response from the backend whether the person has a log today
     const getTodayData = () => {
         const config = {
@@ -466,7 +447,7 @@ function HomeStart(props) {
                 <CheckinRecord checkin = {getTimeString(todayShift.start_time)} 
                     checkout = {getTimeString(todayShift.end_time)} 
                     workDuration = {getDurationString(workedHours, workedMins, workedSecs)} 
-                    boxColor = {colors.fullday}
+                    boxColor = {todayShift.full_half == "N" ? colors.greyText : (todayShift.full_half == "H" ? colors.halfday : colors.fullday)}
                 />
             ) : (
                 <TimeBox hrs = {`${workedHours.toString().length === 1 ? "0"+workedHours : workedHours}`} 

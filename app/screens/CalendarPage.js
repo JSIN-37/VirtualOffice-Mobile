@@ -12,19 +12,19 @@ const CalendarPage = (props) => {
     const calendar = 
         [
             {
-                "date" : "2021-07-10",
+                "date" : "2021-09-10",
                 "fullDay" : true,
             },
             {
-                "date" : "2021-07-21",
+                "date" : "2021-09-21",
                 "fullDay" : true,
             },
             {
-                "date" : "2021-07-22",
+                "date" : "2021-09-22",
                 "fullDay" : false,
             },
             {
-                "date" : "2021-08-02",
+                "date" : "2021-09-02",
                 "fullDay" : false,
             },
         ];
@@ -47,11 +47,14 @@ const CalendarPage = (props) => {
 
     //Get all the worked days alone with the label halfday/fullday until today
     const getWorkedDates = () => {
+        const config = {
+            headers: { Authorization: `Bearer ${props.navigation.getParam('userToken')}` },
+        };
         axios
-        .get("http://35.232.73.124:3040/api/v1/docs/#/User")
+        .get("http://35.232.73.124:3040/api/v1/docs/#/User", config)
         .then((res) => {
             let data = res.data;
-            return data; //data should include check-in time, check-out time, if the person has already done a check-in/check-out today
+            return data; 
         }, (error) => {
             console.log(error);
         });
